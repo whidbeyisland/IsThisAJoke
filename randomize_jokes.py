@@ -56,6 +56,7 @@ class RandomizeJokes:
     available_nouns = []
     available_verbs = []
     available_adjectives = []
+    randomized_jokes = []
 
 
 
@@ -65,14 +66,13 @@ class RandomizeJokes:
         available_verbs = self.read_file('most-common-verbs-english.csv')
         available_adjs = self.read_file('english-adjectives.txt')
 
-        '''
-        print(available_nouns[0:20])
-        print(len(available_nouns))
-        print(available_verbs[0:20])
-        print(len(available_verbs))
-        print(available_adjs[0:20])
-        print(len(available_adjs))
-        '''
+        jokes = [
+            'Why did the chicken cross the road? To get to the other side',
+            'A skeleton walks into a bar. He says, "give me a beer and a mop"'
+        ]
+        for i in range(0, len(jokes)):
+            self.randomized_jokes.append(self.randomize_joke(jokes[i]))
+        print(self.randomized_jokes[0:3])
     
     def read_file(self, file_path):
         try:
@@ -81,6 +81,28 @@ class RandomizeJokes:
         except:
             print('Could not read file: ' + os.path.join(path, file_path))
             return []
+    
+    def randomize_joke(self, joke):
+        joke_nopunct = re.sub(r'[^\w\s]', '', joke)
+        joke_words = joke_nopunct.split()
+
+        # get predicted parts of speech of all words in joke
+        pos_joke_predicted = nltk.tag.pos_tag(joke_words)
+        print(pos_joke_predicted)
+
+        joke_content_word_indices = []
+        for i in range(0, len(pos_joke_predicted)):
+            try:
+                if pos_joke_predicted[i][1][:2] in ('NN', 'VB', 'JJ'):
+                    joke_content_word_indices.append(i)
+            except:
+                pass
+        print(joke_content_word_indices)
+
+        joke_content_words = [word for (idx, word) in enumerate(joke_words) if idx in joke_content_word_indices]
+        print(joke_content_words)
+
+        return 'hello world!'
 
 
 
