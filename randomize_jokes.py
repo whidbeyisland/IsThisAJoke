@@ -39,9 +39,6 @@ from sklearn.decomposition import PCA
 
 path = os.getcwd()
 path_resources = os.path.join(path, 'resources')
-available_nouns = []
-available_verbs = []
-available_adjectives = []
 
 class RandomizeJokes:
     df = None
@@ -53,33 +50,40 @@ class RandomizeJokes:
 
     embeddings = None
 
+    unconverted_jokes = []
     available_nouns = []
     available_verbs = []
     available_adjectives = []
     randomized_jokes = []
 
-
-
     def main(self):
-        # getting all nouns
-        available_nouns = self.read_file('most-common-nouns-english.csv')
-        available_verbs = self.read_file('most-common-verbs-english.csv')
-        available_adjs = self.read_file('english-adjectives.txt')
+        # getting all parts of speech that oculd be used to randomize jokes
+        self.available_nouns = self.read_file('most-common-nouns-english.csv', 0)
+        self.available_verbs = self.read_file('most-common-verbs-english.csv', 0)
+        self.available_adjs = self.read_file('english-adjectives.txt', 0)
 
-        jokes = [
-            'Why did the chicken cross the road? To get to the other side',
-            'A skeleton walks into a bar. He says, "give me a beer and a mop"'
-        ]
-        for i in range(0, len(jokes)):
-            self.randomized_jokes.append(self.randomize_joke(jokes[i]))
+        # getting all jokes to be randomized
+        self.unconverted_jokes = self.read_file('unconverted-jokes.txt', list(range(0, 2)))
+
+        # randomizing jokes
+        for i in range(0, len(self.unconverted_jokes)):
+            self.randomized_jokes.append(self.randomize_joke(self.unconverted_jokes[i, 0]))
         print(self.randomized_jokes[0:3])
+
+        # writing both unconverted and randomized jokes to new file
+        jokes_df = pd.df(self.unconverted_jokes, columns = ['Joke', 'Category'])
+
+        # coati: leaving off here, create new DF with 2 columns: "Joke" and then "Category"
+        # which is always "Not Joke"
+        jokes_df = jokes_df.concat(pd.df(self.randomized_jokes))
+
     
-    def read_file(self, file_path):
+    def read_file(self, file_path, column_range):
         try:
             df_thisfile = pd.read_csv(os.path.join(path_resources, file_path))
-            return df_thisfile.iloc[0:len(df_thisfile),0]
+            return df_thisfile.iloc[0:len(df_thisfile),column_range]
         except:
-            print('Could not read file: ' + os.path.join(path, file_path))
+            print('Could not read file, or file was empty: ' + os.path.join(path, file_path))
             return []
     
     def randomize_joke(self, joke):
@@ -106,17 +110,18 @@ class RandomizeJokes:
         # pick random words in the joke, and replace them with random content words of
         # the same part of speech
         random_words_to_replace = random.choices(joke_content_words, k=num_words_to_replace)
-        print(random_words_to_replace)
         for i in range(0, num_words_to_replace):
             word_to_replace = random_words_to_replace[i][1]
             word_to_replace_pos = pos_joke_predicted[random_words_to_replace[i][0]][1]
-            print(word_to_replace_pos)
             if word_to_replace_pos[:2] == 'NN':
-                randomized_joke = randomized_joke.replace(word_to_replace, 'panda')
+                randomized_joke = randomized_joke.replace(word_to_replace, 
+                random.choice(self.available_nouns))
             elif word_to_replace_pos[:2] == 'VB':
-                randomized_joke = randomized_joke.replace(word_to_replace, 'eats')
+                randomized_joke = randomized_joke.replace(word_to_replace,
+                random.choice(self.available_verbs))
             else:
-                randomized_joke = randomized_joke.replace(word_to_replace, 'magical')
+                randomized_joke = randomized_joke.replace(word_to_replace,
+                random.choice(self.available_adjectives))
 
         return randomized_joke
 
