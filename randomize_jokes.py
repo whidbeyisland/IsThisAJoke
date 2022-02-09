@@ -12,6 +12,7 @@ import torchtext
 import nltk
 import snscrape.modules.twitter as sntwitter
 from copy import deepcopy
+import csv
 
 from torchvision import models
 from torchvision import transforms
@@ -39,6 +40,7 @@ from sklearn.decomposition import PCA
 
 path = os.getcwd()
 path_resources = os.path.join(path, 'resources')
+fields = ['Joke', 'Category']
 
 class RandomizeJokes:
     df = None
@@ -58,37 +60,38 @@ class RandomizeJokes:
 
     def main(self):
         # getting all parts of speech that oculd be used to randomize jokes
-        self.available_nouns = self.read_file('most-common-nouns-english.csv', 0)
-        self.available_verbs = self.read_file('most-common-verbs-english.csv', 0)
-        self.available_adjs = self.read_file('english-adjectives.txt', 0)
+        self.available_nouns = self.read_file('most-common-nouns-english.csv')
+        self.available_verbs = self.read_file('most-common-verbs-english.csv')
+        self.available_adjs = self.read_file('english-adjectives.txt')
 
         # getting all jokes to be randomized
-        self.unconverted_jokes = self.read_file('unconverted-jokes.txt', list(range(0, 2)))
+        self.unconverted_jokes = pd.read_csv(os.path.join(path_resources, 'unconverted-jokes - Sheet1.csv'))
 
         # randomizing jokes
         for i in range(0, len(self.unconverted_jokes)):
-            self.randomized_jokes.append(self.randomize_joke(self.unconverted_jokes[i, 0]))
-        print(self.randomized_jokes[0:3])
+            # new_row = self.randomize_joke(self.unconverted_jokes[i][0])
+            new_randomized_joke = self.randomize_joke(self.unconverted_jokes.iloc[i, 0])
+            new_row = [new_randomized_joke, 'Not Joke']
+            self.randomized_jokes.append(new_row)
 
         # writing both unconverted and randomized jokes to new file
-        jokes_df = pd.df(self.unconverted_jokes, columns = ['Joke', 'Category'])
-
-        # coati: leaving off here, create new DF with 2 columns: "Joke" and then "Category"
-        # which is always "Not Joke"
-        jokes_df = jokes_df.concat(pd.df(self.randomized_jokes))
-
+        jokes_df = pd.DataFrame(self.unconverted_jokes, columns = fields)
+        jokes_df_rand = pd.DataFrame(self.randomized_jokes, columns = fields)
+        jokes_df = jokes_df.append(jokes_df_rand)
+        output_filepath = os.path.join(path_resources, 'all-jokes.csv')
+        jokes_df.to_csv(output_filepath)
     
-    def read_file(self, file_path, column_range):
+    def read_file(self, file_path):
         try:
             df_thisfile = pd.read_csv(os.path.join(path_resources, file_path))
-            return df_thisfile.iloc[0:len(df_thisfile),column_range]
+            return df_thisfile.iloc[0:len(df_thisfile),0]
         except:
             print('Could not read file, or file was empty: ' + os.path.join(path, file_path))
             return []
     
     def randomize_joke(self, joke):
         randomized_joke = joke
-        num_words_to_replace = 2
+        num_words_to_replace = 3
         joke_nopunct = re.sub(r'[^\w\s]', '', joke)
         joke_words = joke_nopunct.split()
 
@@ -121,7 +124,7 @@ class RandomizeJokes:
                 random.choice(self.available_verbs))
             else:
                 randomized_joke = randomized_joke.replace(word_to_replace,
-                random.choice(self.available_adjectives))
+                random.choice(self.available_adjs))
 
         return randomized_joke
 
