@@ -83,13 +83,15 @@ class RandomizeJokes:
             return []
     
     def randomize_joke(self, joke):
+        randomized_joke = joke
+        num_words_to_replace = 2
         joke_nopunct = re.sub(r'[^\w\s]', '', joke)
         joke_words = joke_nopunct.split()
 
-        # get predicted parts of speech of all words in joke
+        # get predicted parts of speech of all words in the joke
         pos_joke_predicted = nltk.tag.pos_tag(joke_words)
-        print(pos_joke_predicted)
 
+        # find the indices of the content words (i.e. nouns, verbs, adjectives) in the joke
         joke_content_word_indices = []
         for i in range(0, len(pos_joke_predicted)):
             try:
@@ -97,12 +99,26 @@ class RandomizeJokes:
                     joke_content_word_indices.append(i)
             except:
                 pass
-        print(joke_content_word_indices)
 
-        joke_content_words = [word for (idx, word) in enumerate(joke_words) if idx in joke_content_word_indices]
-        print(joke_content_words)
+        # find the content words in the joke
+        joke_content_words = [[idx, word] for (idx, word) in enumerate(joke_words) if idx in joke_content_word_indices]
 
-        return 'hello world!'
+        # pick random words in the joke, and replace them with random content words of
+        # the same part of speech
+        random_words_to_replace = random.choices(joke_content_words, k=num_words_to_replace)
+        print(random_words_to_replace)
+        for i in range(0, num_words_to_replace):
+            word_to_replace = random_words_to_replace[i][1]
+            word_to_replace_pos = pos_joke_predicted[random_words_to_replace[i][0]][1]
+            print(word_to_replace_pos)
+            if word_to_replace_pos[:2] == 'NN':
+                randomized_joke = randomized_joke.replace(word_to_replace, 'panda')
+            elif word_to_replace_pos[:2] == 'VB':
+                randomized_joke = randomized_joke.replace(word_to_replace, 'eats')
+            else:
+                randomized_joke = randomized_joke.replace(word_to_replace, 'magical')
+
+        return randomized_joke
 
 
 
