@@ -41,6 +41,7 @@ from sklearn.decomposition import PCA
 path = os.getcwd()
 path_resources = os.path.join(path, 'resources')
 fields = ['Joke', 'Category']
+times_to_randomize = 20
 
 class RandomizeJokes:
     df = None
@@ -70,9 +71,10 @@ class RandomizeJokes:
         # randomizing jokes
         for i in range(0, len(self.unconverted_jokes)):
             # new_row = self.randomize_joke(self.unconverted_jokes[i][0])
-            new_randomized_joke = self.randomize_joke(self.unconverted_jokes.iloc[i, 0])
-            new_row = [new_randomized_joke, 'Not Joke']
-            self.randomized_jokes.append(new_row)
+            for i in range(0, times_to_randomize):
+                new_randomized_joke = self.randomize_joke(self.unconverted_jokes.iloc[i, 0])
+                new_row = [new_randomized_joke, 'Not Joke']
+                self.randomized_jokes.append(new_row)
 
         # writing both unconverted and randomized jokes to new file
         jokes_df = pd.DataFrame(self.unconverted_jokes, columns = fields)
